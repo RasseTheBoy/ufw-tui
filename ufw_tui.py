@@ -98,6 +98,9 @@ def get_ports() -> list[Port]:
         # Add the port to the list
         port_lst.append(Port(port_num, allowed, protocol))
         
+    # Sort by port number
+    port_lst.sort(key=lambda port: port.port_num)
+        
     return port_lst
 
 
@@ -181,11 +184,10 @@ def main(stdscr: window) -> None:
     :param stdscr: Curses window
     :raises ValueError: An error occured while getting the ports
     """
-    # stdscr = curses.initscr()
     curses.curs_set(0)
     
     port_lst = get_ports()
-    current_indx = 0
+    current_index = 0
     
     while True:
         # Display the allowed ports
@@ -196,10 +198,23 @@ def main(stdscr: window) -> None:
             # Display a message if no ports are found
             stdscr.addstr(2, 0, 'No ports found (press "a" to add ports)')
         else:
+            max_y, max_x = stdscr.getmaxyx()
+            
+            # Reserve top 2 lines for header
+            visible_height = max_y - 2
+            
+            # Determine the scroll window
+            start_index = max(
+                0,
+                current_index - visible_height + 1
+            ) if current_index >= visible_height else 0
+            end_index = min(len(port_lst), start_index + visible_height)
+
             # Display the ports and their status
-            for indx, port in enumerate(port_lst):
-                line = f'{port.str_port().ljust(15)} {port.str_allowed()}'
-                stdscr.addstr(indx + 2, 0, line, 0 if indx != current_indx else curses.A_REVERSE)
+            for visible_idx, actual_idx in enumerate(range(start_index, end_index)):
+                port_obj = port_lst[actual_idx]
+                attr = curses.A_REVERSE if actual_idx == current_index else 0
+                stdscr.addstr(visible_idx + 2, 0, f'{port_obj.str_port().ljust(15)} {port_obj.str_allowed()}', attr)
         
         key_input = stdscr.getch()
         
@@ -208,12 +223,12 @@ def main(stdscr: window) -> None:
             break
         
         # Move selection up
-        elif key_input == curses.KEY_UP and current_indx > 0:
-            current_indx -= 1
+        elif key_input == curses.KEY_UP and current_index > 0:
+            current_index -= 1
         
         # Move selection down
-        elif key_input == curses.KEY_DOWN and current_indx < len(port_lst) - 1:
-            current_indx += 1
+        elif key_input == curses.KEY_DOWN and current_index < len(port_lst) - 1:
+            current_index += 1
         
         # Toggle port
         elif key_input == ord(' '):
@@ -222,7 +237,7 @@ def main(stdscr: window) -> None:
                 continue
             
             # Toggle selectedd port
-            port_lst[current_indx].toggle()
+            port_lst[current_index].toggle()
         
         # Add new port(s)
         elif key_input == ord('a'):
@@ -261,12 +276,12 @@ def main(stdscr: window) -> None:
 
         # Delete port
         elif key_input == ord('d'):
-            port_lst[current_indx].delete()
-            port_lst.pop(current_indx)
+            port_lst[current_index].delete()
+            port_lst.pop(current_index)
             
             # If the current index is out of bounds, set it to the last index
-            if current_indx >= len(port_lst):
-                current_indx = len(port_lst) - 1
+            if current_index >= len(port_lst):
+                current_index = len(port_lst) - 1
         
         # Help winodw
         elif key_input == ord('h'):
