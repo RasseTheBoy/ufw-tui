@@ -86,7 +86,7 @@ def get_ports() -> list[Port]:
         # 1: Port number
         # 2: Protocol
         # 3: ALLOW or DENY
-        match = re.match(r'^\[\s*\d+\]\s+(\d+)(?:/(tcp|udp))?\s+(ALLOW|DENY)', line)
+        match = re.match(r'^\[\s*\d+\]\s+(\w+)(?:/(tcp|udp))?\s+(ALLOW|DENY)', line)
         
         if match is None:
             raise ValueError(f'Invalid line: {line}')
@@ -198,7 +198,7 @@ def main(stdscr: window) -> None:
         else:
             # Display the ports and their status
             for indx, port in enumerate(port_lst):
-                line = f'{port.str_port().ljust(10)}{port.str_allowed()}'
+                line = f'{port.str_port().ljust(15)} {port.str_allowed()}'
                 stdscr.addstr(indx + 2, 0, line, 0 if indx != current_indx else curses.A_REVERSE)
         
         key_input = stdscr.getch()
@@ -236,14 +236,14 @@ def main(stdscr: window) -> None:
                 # 1: Denyed (!) or allowed (empty)
                 # 2: Port number
                 # 3: Protocol
-                match = re.match(r'(!)?(\d+)(?:/(tcp|udp))?', port_input)
+                match = re.match(r'(!)?(\w+)(?:/(tcp|udp))?', port_input)
                 if match is None:
                     show_popup(stdscr, f'Invalid port: {port_input}')
                     continue
                 
                 port = Port(
                     port_num=match.group(2),
-                    allowed=match.group(1) == '!',
+                    allowed=match.group(1) != '!',
                     protocol=match.group(3) or 'any'  # type: ignore
                 )
                 
