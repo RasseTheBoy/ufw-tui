@@ -1,6 +1,6 @@
 # UFW-TUI
 
-This is a simple terminal user interface for ufw configuration.
+UFW-TUI (Uncomplicated Firewall-Text User Interface) is a simple command-line tool for managing UFW rules.
 
 ## Installation
 
